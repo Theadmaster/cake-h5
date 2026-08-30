@@ -1,26 +1,66 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #faf7f1;
+  --foreground: #3b2e24;
+  --card: #ffffff;
+  --card-foreground: #3b2e24;
+  --muted: #f2ebe1;
+  --muted-foreground: #6f5f52;
+  --primary: #6b4a33;
+  --primary-foreground: #ffffff;
+  --accent: #b0824f;
+  --accent-soft: #f3e6d3;
+  --matcha: #5f7d5c;
+  --matcha-soft: #e7efe4;
+  --rose: #c48f8a;
+  --rose-soft: #f6e4e1;
+  --border: #e9dfd1;
+  --ring: #b0824f;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-accent: var(--accent);
+  --color-accent-soft: var(--accent-soft);
+  --color-matcha: var(--matcha);
+  --color-matcha-soft: var(--matcha-soft);
+  --color-rose: var(--rose);
+  --color-rose-soft: var(--rose-soft);
+  --color-border: var(--border);
+  --color-ring: var(--ring);
+  --font-sans: var(--font-noto-sans-sc), "PingFang SC", "Hiragino Sans GB",
+    sans-serif;
+  --font-serif: var(--font-noto-serif-sc), "Songti SC", "SimSun", serif;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans);
+}
+
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
 }
