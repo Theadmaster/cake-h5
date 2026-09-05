@@ -4,12 +4,11 @@
 
 import Link from "next/link";
 import { notFound, useParams } from "next/navigation";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import SectionTitle from "@/components/SectionTitle";
 import { CakeSilhouette, IconClock, IconPin, IconStar } from "@/components/icons";
 import type { IconProps } from "@/components/icons";
-import { cakes } from "@/data/cakes";
-import type { AromaTone } from "@/data/cakes";
+import type { Cake, AromaTone } from "@/types";
 
 /* ---------------- 图标（内联 SVG，Lucide 风格） ---------------- */
 
@@ -187,35 +186,49 @@ function ScoreBar({ score }: { score: number }) {
   );
 }
 
-type Comment = { id: number; name: string; tone: string; time: string; text: string };
-
-/* 预置评论者：取商品好评点前几条转为评论示例 */
-const REVIEWERS = [
-  { name: "糕友小K", tone: "bg-accent-soft text-[#7a5a35]", time: "3 天前" },
-  { name: "甜品侦探M", tone: "bg-matcha-soft text-matcha", time: "1 周前" },
-  { name: "栗子同学", tone: "bg-rose-soft text-rose", time: "2 周前" },
-];
-
 /* ---------------- 页面 ---------------- */
 
 export default function CakeDetailPage() {
   const params = useParams<{ id: string }>();
-  const cake = cakes.find((c) => c.id === params.id);
+  const [cake, setCake] = useState<Cake | null>(null);
+  const [loading, setLoading] = useState(true);
   const trackRef = useRef<HTMLDivElement>(null);
   const [page, setPage] = useState(0);
   const [fav, setFav] = useState(false);
-  const [wants, setWants] = useState(cake?.detail.wants ?? 0);
+  const [wants, setWants] = useState(0);
+  const [selectedSku, setSelectedSku] = useState<number>(0);
   const [userDims, setUserDims] = useState<number[] | null>(null);
   const [editing, setEditing] = useState(false);
   const [draftDims, setDraftDims] = useState<number[]>([]);
-  const [draft, setDraft] = useState("");
-  const [comments, setComments] = useState<Comment[]>(() =>
-    (cake?.detail.goodReviews ?? []).slice(0, 3).map((text, i) => ({
-      id: i + 1,
-      ...REVIEWERS[i % REVIEWERS.length],
-      text,
-    })),
-  );
+
+  useEffect(() => {
+    const fetchCake = async () => {
+      try {
+        const res = await fetch(`/api/products/${params.id}`);
+        const json = await res.json();
+        if (json.code === 0) {
+          setCake(json.data);
+          setWants(json.data.detail.wants);
+        } else {
+          notFound();
+        }
+      } catch (error) {
+        console.error('获取商品详情失败:', error);
+        notFound();
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchCake();
+  }, [params.id]);
+
+  if (loading) {
+    return (
+      <div className="mx-auto flex min-h-dvh w-full max-w-[480px] flex-col items-center justify-center bg-background">
+        <p className="text-sm text-muted-foreground">加载中...</p>
+      </div>
+    );
+  }
 
   if (!cake) notFound();
   const d = cake.detail;
@@ -248,22 +261,6 @@ export default function CakeDetailPage() {
   function submitDims() {
     setUserDims(draftDims);
     setEditing(false);
-  }
-
-  function submitComment() {
-    const text = draft.trim();
-    if (!text) return;
-    setComments((prev) => [
-      {
-        id: (prev[0]?.id ?? 0) + 1,
-        name: "我",
-        tone: "bg-primary text-primary-foreground",
-        time: "刚刚",
-        text,
-      },
-      ...prev,
-    ]);
-    setDraft("");
   }
 
   const userAvg =
@@ -312,11 +309,16 @@ export default function CakeDetailPage() {
           <div className="flex min-w-0 items-baseline gap-2">
             <span className="font-serif text-[24px] font-semibold text-primary">
               <span className="text-[14px] font-normal">¥</span>
-              {cake.price}
+              {cake.skus.length > 0 ? cake.skus[selectedSku].price : cake.price}
             </span>
             <span className="truncate text-xs text-muted-foreground">
-              / {d.sizePeople}
+              / {cake.skus.length > 0 ? cake.skus[selectedSku].sizeDetail || cake.skus[selectedSku].size : d.sizePeople}
             </span>
+            {cake.status && cake.status !== '在架' && (
+              <span className="rounded-full bg-rose/10 px-2 py-0.5 text-[10px] font-medium text-rose">
+                {cake.status}
+              </span>
+            )}
           </div>
           <button
             type="button"
@@ -342,6 +344,27 @@ export default function CakeDetailPage() {
         <h1 className="mt-2 text-[17px] font-semibold leading-snug text-foreground">
           {cake.brand} {cake.name}
         </h1>
+        {/* 规格选择 */}
+        {cake.skus.length > 1 && (
+          <div className="mt-3 flex flex-wrap gap-2">
+            {cake.skus.map((sku, i) => (
+              <button
+                key={sku.id}
+                type="button"
+                onClick={() => setSelectedSku(i)}
+                disabled={sku.status !== '在架'}
+                className={`rounded-full border px-3 py-1.5 text-[12px] transition active:scale-95 disabled:opacity-50 ${
+                  selectedSku === i
+                    ? "border-accent bg-accent-soft font-medium text-[#7a5a35]"
+                    : "border-border bg-card text-foreground hover:border-accent/50"
+                }`}
+              >
+                {sku.size}
+                <span className="ml-1 text-[10px] text-muted-foreground">¥{sku.price}</span>
+              </button>
+            ))}
+          </div>
+        )}
         <div className="mt-2.5 flex flex-wrap items-center gap-2 text-[11px] text-muted-foreground">
           <span
             className={`rounded-full px-2 py-0.5 text-[10px] font-medium leading-relaxed text-white ${cake.heatClass}`}
@@ -683,71 +706,6 @@ export default function CakeDetailPage() {
             </div>
           ))}
         </dl>
-      </section>
-
-      {/* 8. 评论区 */}
-      <section className="px-4 pt-7">
-        <div className="flex items-center justify-between">
-          <SectionTitle>评论</SectionTitle>
-          <span className="text-[11px] text-muted-foreground">
-            {comments.length} 条
-          </span>
-        </div>
-
-        <div className="mt-3.5 rounded-2xl border border-border bg-card p-3.5">
-          <label className="sr-only" htmlFor="comment-input">
-            写评论
-          </label>
-          <textarea
-            id="comment-input"
-            value={draft}
-            onChange={(e) => setDraft(e.target.value)}
-            placeholder="吃过这款？说说你的真实体验…"
-            rows={2}
-            maxLength={200}
-            className="block w-full resize-none bg-transparent text-[12.5px] leading-relaxed text-foreground placeholder:text-muted-foreground focus:outline-none"
-          />
-          <div className="mt-2 flex items-center justify-between">
-            <span className="text-[10px] text-muted-foreground">
-              {draft.length}/200
-            </span>
-            <button
-              type="button"
-              onClick={submitComment}
-              disabled={!draft.trim()}
-              className="h-9 cursor-pointer rounded-full bg-primary px-5 text-[12.5px] font-medium text-primary-foreground transition hover:opacity-95 active:scale-95 disabled:cursor-not-allowed disabled:bg-muted disabled:text-muted-foreground disabled:active:scale-100"
-            >
-              发布
-            </button>
-          </div>
-        </div>
-
-        <ul className="mt-3 space-y-3">
-          {comments.map((c) => (
-            <li
-              key={c.id}
-              className="rounded-2xl border border-border bg-card p-3.5"
-            >
-              <div className="flex items-center gap-2.5">
-                <span
-                  aria-hidden="true"
-                  className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[12px] font-medium ${c.tone}`}
-                >
-                  {c.name.slice(0, 1)}
-                </span>
-                <div className="min-w-0">
-                  <p className="truncate text-[12.5px] font-medium text-foreground">
-                    {c.name}
-                  </p>
-                  <p className="text-[10px] text-muted-foreground">{c.time}</p>
-                </div>
-              </div>
-              <p className="mt-2.5 text-[12.5px] leading-relaxed text-foreground/90">
-                {c.text}
-              </p>
-            </li>
-          ))}
-        </ul>
       </section>
     </div>
   );

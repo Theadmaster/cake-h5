@@ -3,9 +3,8 @@
 /* 选糕列表（平铺筛选 + 排序 + 商品卡片）· 首页与选购页共用 */
 
 import Link from "next/link";
-import { useEffect, useMemo, useRef, useState } from "react";
-import { cakes } from "@/data/cakes";
-import type { TagKind } from "@/data/cakes";
+import { useEffect, useRef, useState } from "react";
+import type { CakeListItem } from "@/types";
 import { CakeSilhouette, IconClock, IconSearch, IconStar } from "@/components/icons";
 import type { IconProps } from "@/components/icons";
 
@@ -73,7 +72,7 @@ const emptySelection: Selection = {
 
 const SORTS = ["综合排序", "评分最高", "价格最低", "销量最高"];
 
-function tagChipClass(kind: TagKind): string {
+function tagChipClass(kind: "good" | "note" | "plain"): string {
   switch (kind) {
     case "good":
       return "bg-matcha-soft text-matcha";
@@ -96,6 +95,8 @@ export default function CakeBrowser({
   const [query, setQuery] = useState("");
   const [showTop, setShowTop] = useState(false);
   const [stuck, setStuck] = useState(false);
+  const [cakes, setCakes] = useState<CakeListItem[]>([]);
+  const [loading, setLoading] = useState(true);
   const sentinelRef = useRef<HTMLDivElement>(null);
 
   /* 哨兵滚出吸顶线时，视为已吸顶 */
@@ -118,35 +119,33 @@ export default function CakeBrowser({
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  const list = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    const filtered = cakes.filter((c) => {
-      if (
-        q &&
-        !c.name.toLowerCase().includes(q) &&
-        !c.brand.toLowerCase().includes(q) &&
-        !c.flavors.some((f) => f.toLowerCase().includes(q))
-      )
-        return false;
-      if (selected.brand.length && !selected.brand.includes(c.brand))
-        return false;
-      if (selected.size.length && !selected.size.includes(c.size))
-        return false;
-      if (
-        selected.flavor.length &&
-        !c.flavors.some((f) => selected.flavor.includes(f))
-      )
-        return false;
-      if (selected.booking.length && !selected.booking.includes(c.bookingGroup))
-        return false;
-      return true;
-    });
-    const sorted = [...filtered];
-    if (sortBy === 1) sorted.sort((a, b) => b.rating - a.rating);
-    if (sortBy === 2) sorted.sort((a, b) => a.price - b.price);
-    if (sortBy === 3) sorted.sort((a, b) => b.reviews - a.reviews);
-    return sorted;
+  /* 获取商品数据 */
+  useEffect(() => {
+    const fetchCakes = async () => {
+      try {
+        const params = new URLSearchParams();
+        params.set('pageSize', '100');
+        if (query.trim()) params.set('keyword', query.trim());
+        if (selected.brand.length) params.set('brand', selected.brand.join(','));
+        if (selected.size.length) params.set('size', selected.size.join(','));
+        const sortMap = ['heat', 'rating', 'price', 'sales'];
+        params.set('sort', sortMap[sortBy] || 'heat');
+
+        const res = await fetch(`/api/products?${params.toString()}`);
+        const json = await res.json();
+        if (json.code === 0) {
+          setCakes(json.data.list);
+        }
+      } catch (error) {
+        console.error('获取商品列表失败:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchCakes();
   }, [selected, sortBy, query]);
+
+  const list = cakes;
 
   function toggleSelection(key: FilterKey, opt: string) {
     setSelected((prev) => {
@@ -258,7 +257,11 @@ export default function CakeBrowser({
 
       {/* 商品列表 */}
       <div className="flex-1 px-4 pt-3.5 pb-28" aria-label="蛋糕列表">
-        {list.length > 0 ? (
+        {loading ? (
+          <div className="flex flex-col items-center gap-2.5 py-16 text-center">
+            <p className="text-sm text-muted-foreground">加载中...</p>
+          </div>
+        ) : list.length > 0 ? (
           <ul className="space-y-3">
             {list.map((c) => (
               <li key={c.id}>

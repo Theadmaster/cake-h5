@@ -1,6 +1,7 @@
 /* 首页 · 哦买糕的 Oh My Cake!（原型图布局：KV + 平台名 + 三卡片 + CTA + 选糕列表） */
 
 import Link from "next/link";
+import AddScheduleButton from "@/components/AddScheduleButton";
 import CakeBrowser from "@/components/CakeBrowser";
 import KvArt from "@/components/KvArt";
 
@@ -11,18 +12,21 @@ const highlights = [
     main: "6 大私房品牌",
     sub: "Tinyroll、Sillage 等",
     href: "/guide",
+    calendar: false,
   },
   {
     title: "选糕百科",
     main: "动物奶油辨真假",
     sub: "买糕必修课",
-    href: "/list",
+    href: "/wiki",
+    calendar: false,
   },
   {
     title: "即将开抢",
     main: "Tinyroll 瑞士卷",
     sub: "周日 13:00 放号",
     href: "/list",
+    calendar: true,
   },
 ];
 
@@ -40,13 +44,12 @@ export default function HomePage() {
           >
             搜索
           </Link>
-          <button
-            type="button"
-            aria-label="我的"
+          <Link
+            href="/me"
             className="flex h-11 cursor-pointer items-center rounded-full border border-border bg-card/90 px-4 text-xs text-foreground shadow-sm backdrop-blur transition hover:bg-card active:scale-95"
           >
             我的
-          </button>
+          </Link>
         </div>
       </section>
 
@@ -69,19 +72,30 @@ export default function HomePage() {
         aria-label="平台亮点"
       >
         {highlights.map((h) => (
-          <Link
+          <div
             key={h.title}
-            href={h.href}
-            className="flex min-h-[128px] cursor-pointer flex-col items-center justify-center gap-1.5 rounded-2xl bg-muted/70 p-3 text-center transition hover:bg-muted active:scale-[0.98]"
+            className="flex min-h-[128px] flex-col rounded-2xl bg-muted/70 p-3 text-center transition hover:bg-muted"
           >
-            <span className="text-[10px] text-muted-foreground">{h.title}</span>
-            <span className="text-[12.5px] font-medium leading-snug text-foreground">
-              {h.main}
-            </span>
-            <span className="text-[10px] leading-snug text-muted-foreground">
-              {h.sub}
-            </span>
-          </Link>
+            <Link
+              href={h.href}
+              className="flex flex-1 cursor-pointer flex-col items-center justify-center gap-1.5 active:scale-[0.98]"
+            >
+              <span className="text-[10px] text-muted-foreground">{h.title}</span>
+              <span className="text-[12.5px] font-medium leading-snug text-foreground">
+                {h.main}
+              </span>
+              <span className="text-[10px] leading-snug text-muted-foreground">
+                {h.sub}
+              </span>
+            </Link>
+            {h.calendar && (
+              <AddScheduleButton
+                className="mt-2.5 w-full"
+                summary="开抢提醒：Tinyroll 瑞士卷"
+                description="Tinyroll 每周日 13:00 小程序放号，提前蹲点"
+              />
+            )}
+          </div>
         ))}
       </section>
 
