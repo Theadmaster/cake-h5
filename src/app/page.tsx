@@ -4,6 +4,7 @@ import Link from "next/link";
 import CakeBrowser from "@/components/CakeBrowser";
 import KvArt from "@/components/KvArt";
 import UpcomingCard from "@/components/UpcomingCard";
+import { IconSearch } from "@/components/icons";
 
 /* 平台亮点（静态两张） */
 const highlights = [
@@ -30,10 +31,11 @@ export default function HomePage() {
         {/* 右上角悬浮入口 */}
         <div className="absolute right-4 top-4 flex gap-2.5">
           <Link
-            href="/list"
-            className="flex h-11 cursor-pointer items-center rounded-full border border-border bg-card/90 px-4 text-xs text-foreground shadow-sm backdrop-blur transition hover:bg-card active:scale-95"
+            href="/list?search=1"
+            aria-label="搜索"
+            className="flex h-11 w-11 cursor-pointer items-center justify-center rounded-full border border-border bg-card/90 shadow-sm backdrop-blur transition hover:bg-card active:scale-95"
           >
-            搜索
+            <IconSearch className="h-[19px] w-[19px] text-foreground" />
           </Link>
           <Link
             href="/me"

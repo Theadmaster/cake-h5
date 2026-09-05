@@ -1,6 +1,9 @@
+"use client";
+
 /* 选购列表页 · 糕研所（PRD 4.2） */
 
 import Link from "next/link";
+import { useState } from "react";
 import CakeBrowser from "@/components/CakeBrowser";
 import BottomNav from "@/components/BottomNav";
 import { IconSearch } from "@/components/icons";
@@ -24,6 +27,8 @@ function IconChevronLeft({ className }: IconProps) {
 }
 
 export default function ListPage() {
+  const [searchOpen, setSearchOpen] = useState(false);
+
   return (
     <div className="mx-auto flex min-h-dvh w-full max-w-[480px] flex-col bg-background">
       {/* 顶部导航 */}
@@ -42,6 +47,7 @@ export default function ListPage() {
           <button
             type="button"
             aria-label="搜索"
+            onClick={() => setSearchOpen(true)}
             className="flex h-11 w-11 cursor-pointer items-center justify-center rounded-full text-foreground transition hover:bg-muted active:scale-95"
           >
             <IconSearch className="h-[19px] w-[19px]" />
@@ -49,7 +55,7 @@ export default function ListPage() {
         </div>
       </header>
 
-      <CakeBrowser stickyTopClass="top-14" />
+      <CakeBrowser stickyTopClass="top-14" externalSearchOpen={searchOpen} onSearchOpenChange={setSearchOpen} />
 
       <BottomNav active="list" />
     </div>

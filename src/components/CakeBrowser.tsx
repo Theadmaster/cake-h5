@@ -3,6 +3,7 @@
 /* 选糕列表（平铺筛选 + 排序 + 商品卡片）· 首页与选购页共用 */
 
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import type { CakeListItem } from "@/types";
 import { CakeSilhouette, IconClock, IconSearch, IconStar } from "@/components/icons";
@@ -72,30 +73,30 @@ function tagChipClass(kind: "good" | "note" | "plain"): string {
 
 export default function CakeBrowser({
   stickyTopClass = "top-0",
+  externalSearchOpen,
+  onSearchOpenChange,
 }: {
   stickyTopClass?: string;
+  externalSearchOpen?: boolean;
+  onSearchOpenChange?: (open: boolean) => void;
 }) {
+  const searchParams = useSearchParams();
   const [selected, setSelected] = useState<Selection>(emptySelection);
   const [sortBy, setSortBy] = useState(0);
   const [query, setQuery] = useState("");
+  const [submittedQuery, setSubmittedQuery] = useState("");
   const [showTop, setShowTop] = useState(false);
-  const [stuck, setStuck] = useState(false);
+  const [internalSearchOpen, setInternalSearchOpen] = useState(searchParams.get("search") === "1");
+  const searchOpen = externalSearchOpen ?? internalSearchOpen;
+  const setSearchOpen = onSearchOpenChange ?? setInternalSearchOpen;
   const [cakes, setCakes] = useState<CakeListItem[]>([]);
   const [loading, setLoading] = useState(true);
-  const sentinelRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
 
-  /* 哨兵滚出吸顶线时，视为已吸顶 */
+  /* 搜索框展开时自动聚焦 */
   useEffect(() => {
-    const el = sentinelRef.current;
-    if (!el) return;
-    const offset = stickyTopClass === "top-14" ? 56 : 0;
-    const observer = new IntersectionObserver(
-      ([entry]) => setStuck(!entry.isIntersecting),
-      { rootMargin: `-${offset}px 0px 0px 0px`, threshold: 0 },
-    );
-    observer.observe(el);
-    return () => observer.disconnect();
-  }, [stickyTopClass]);
+    if (searchOpen) inputRef.current?.focus();
+  }, [searchOpen]);
 
   useEffect(() => {
     const onScroll = () => setShowTop(window.scrollY > 480);
@@ -110,7 +111,7 @@ export default function CakeBrowser({
       try {
         const params = new URLSearchParams();
         params.set('pageSize', '100');
-        if (query.trim()) params.set('keyword', query.trim());
+        if (submittedQuery.trim()) params.set('keyword', submittedQuery.trim());
         if (selected.brand.length) params.set('brand', selected.brand.join(','));
         if (selected.size.length) params.set('size', selected.size.join(','));
         const sortMap = ['heat', 'rating', 'price', 'sales'];
@@ -128,7 +129,7 @@ export default function CakeBrowser({
       }
     };
     fetchCakes();
-  }, [selected, sortBy, query]);
+  }, [selected, sortBy, submittedQuery]);
 
   const list = cakes;
 
@@ -150,17 +151,18 @@ export default function CakeBrowser({
 
   return (
     <>
-      {/* 吸顶哨兵 */}
-      <div ref={sentinelRef} aria-hidden="true" />
-
-      {/* 筛选（吸顶，搜索框仅吸顶时出现） */}
+      {/* 筛选栏（吸顶） */}
       <div
         className={`sticky ${stickyTopClass} z-30 border-b border-border/70 bg-background px-4 pb-3.5 pt-3`}
       >
-        {stuck && (
-          <div className="mb-3 flex h-11 items-center gap-2.5 rounded-full border border-border bg-card px-4 shadow-[0_1px_4px_rgba(107,74,51,0.06)]">
+        {searchOpen && (
+          <form
+            className="mb-3 flex h-11 items-center gap-2.5 rounded-full border border-border bg-card px-4 shadow-[0_1px_4px_rgba(107,74,51,0.06)]"
+            onSubmit={(e) => { e.preventDefault(); setSubmittedQuery(query); }}
+          >
             <IconSearch className="h-4 w-4 shrink-0 text-muted-foreground" />
             <input
+              ref={inputRef}
               type="search"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
@@ -168,7 +170,9 @@ export default function CakeBrowser({
               aria-label="搜索蛋糕、品牌、口味"
               className="h-full w-full bg-transparent text-sm text-foreground placeholder:text-muted-foreground focus:outline-none"
             />
-          </div>
+            <button type="button" onClick={() => { setSearchOpen(false); setQuery(""); setSubmittedQuery(""); }} className="shrink-0 text-[11px] text-muted-foreground">取消</button>
+            <button type="submit" className="shrink-0 text-[11px] text-accent">搜索</button>
+          </form>
         )}
 
         {/* 筛选（平铺单行横滑） */}
