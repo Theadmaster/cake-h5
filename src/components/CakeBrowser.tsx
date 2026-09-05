@@ -44,20 +44,6 @@ const FILTERS = [
     label: "日期",
     options: ["提前1天", "提前2天", "提前3天以上", "预约制/抢购", "当日可取"],
   },
-  {
-    key: "flavor",
-    label: "口味",
-    options: [
-      "酸甜果味",
-      "茶味清苦",
-      "芝士咸香",
-      "巧克力浓郁",
-      "花香调",
-      "椰香热带",
-      "奶茶风味",
-      "咸甜口",
-    ],
-  },
 ] as const;
 
 type FilterKey = (typeof FILTERS)[number]["key"];
@@ -67,7 +53,6 @@ const emptySelection: Selection = {
   brand: [],
   size: [],
   booking: [],
-  flavor: [],
 };
 
 const SORTS = ["综合排序", "评分最高", "价格最低", "销量最高"];
