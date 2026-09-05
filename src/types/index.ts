@@ -16,6 +16,7 @@ export interface Brand {
   advance_booking_text: string | null;
   advance_days: number | null;
   release_stock_time: string | null;
+  release_stock_day: '周一' | '周二' | '周三' | '周四' | '周五' | '周六' | '周日' | '每天' | '随机' | null;
   limit_rules: string | null;
   purchase_notes: string | null;
   other_services: string[] | null;

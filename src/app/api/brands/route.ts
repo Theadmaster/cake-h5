@@ -8,7 +8,7 @@ export async function GET() {
       `SELECT id, name, slug, logo_url, selling_point, description,
               purchase_channels, pickup_methods, rush_difficulty,
               advance_booking_text, advance_days, release_stock_time,
-              limit_rules, purchase_notes, other_services, contact_info
+              release_stock_day, limit_rules, purchase_notes, other_services, contact_info
        FROM brands
        WHERE is_active = 1
        ORDER BY name`

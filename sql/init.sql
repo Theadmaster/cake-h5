@@ -26,6 +26,7 @@ CREATE TABLE brands (
     advance_booking_text VARCHAR(100) COMMENT '预订时间文案',
     advance_days        INT COMMENT '建议提前天数',
     release_stock_time  TIME COMMENT '库存释放时间',
+    release_stock_day   ENUM('周一','周二','周三','周四','周五','周六','周日','每天','随机') COMMENT '库存释放日期',
     limit_rules         TEXT COMMENT '限购规则',
     purchase_notes      TEXT COMMENT '购买须知',
     other_services      JSON COMMENT '其他服务',

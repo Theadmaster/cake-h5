@@ -1,32 +1,23 @@
 /* 首页 · 哦买糕的 Oh My Cake!（原型图布局：KV + 平台名 + 三卡片 + CTA + 选糕列表） */
 
 import Link from "next/link";
-import AddScheduleButton from "@/components/AddScheduleButton";
 import CakeBrowser from "@/components/CakeBrowser";
 import KvArt from "@/components/KvArt";
+import UpcomingCard from "@/components/UpcomingCard";
 
-/* 平台亮点（原型三卡片） */
+/* 平台亮点（静态两张） */
 const highlights = [
   {
     title: "预订攻略",
     main: "6 大私房品牌",
     sub: "Tinyroll、Sillage 等",
     href: "/guide",
-    calendar: false,
   },
   {
     title: "选糕百科",
     main: "动物奶油辨真假",
     sub: "买糕必修课",
     href: "/wiki",
-    calendar: false,
-  },
-  {
-    title: "即将开抢",
-    main: "Tinyroll 瑞士卷",
-    sub: "周日 13:00 放号",
-    href: "/list",
-    calendar: true,
   },
 ];
 
@@ -72,31 +63,21 @@ export default function HomePage() {
         aria-label="平台亮点"
       >
         {highlights.map((h) => (
-          <div
+          <Link
             key={h.title}
-            className="flex min-h-[128px] flex-col rounded-2xl bg-muted/70 p-3 text-center transition hover:bg-muted"
+            href={h.href}
+            className="flex min-h-[128px] flex-col items-center justify-center rounded-2xl bg-muted/70 p-3 text-center transition hover:bg-muted active:scale-[0.98]"
           >
-            <Link
-              href={h.href}
-              className="flex flex-1 cursor-pointer flex-col items-center justify-center gap-1.5 active:scale-[0.98]"
-            >
-              <span className="text-[10px] text-muted-foreground">{h.title}</span>
-              <span className="text-[12.5px] font-medium leading-snug text-foreground">
-                {h.main}
-              </span>
-              <span className="text-[10px] leading-snug text-muted-foreground">
-                {h.sub}
-              </span>
-            </Link>
-            {h.calendar && (
-              <AddScheduleButton
-                className="mt-2.5 w-full"
-                summary="开抢提醒：Tinyroll 瑞士卷"
-                description="Tinyroll 每周日 13:00 小程序放号，提前蹲点"
-              />
-            )}
-          </div>
+            <span className="text-[10px] text-muted-foreground">{h.title}</span>
+            <span className="text-[12.5px] font-medium leading-snug text-foreground">
+              {h.main}
+            </span>
+            <span className="text-[10px] leading-snug text-muted-foreground">
+              {h.sub}
+            </span>
+          </Link>
         ))}
+        <UpcomingCard />
       </section>
 
       {/* CTA */}
