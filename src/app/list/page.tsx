@@ -3,7 +3,7 @@
 /* 选购列表页 · 糕研所（PRD 4.2） */
 
 import Link from "next/link";
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import CakeBrowser from "@/components/CakeBrowser";
 import BottomNav from "@/components/BottomNav";
 import { IconSearch } from "@/components/icons";
@@ -55,7 +55,9 @@ export default function ListPage() {
         </div>
       </header>
 
-      <CakeBrowser stickyTopClass="top-14" externalSearchOpen={searchOpen} onSearchOpenChange={setSearchOpen} />
+      <Suspense>
+        <CakeBrowser stickyTopClass="top-14" externalSearchOpen={searchOpen} onSearchOpenChange={setSearchOpen} />
+      </Suspense>
 
       <BottomNav active="list" />
     </div>

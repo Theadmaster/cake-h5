@@ -158,7 +158,7 @@ export const cakes: Cake[] = [
         sugar: "低糖（约 12°Brix）",
         additives: "仅含吉利丁（凝固剂），无防腐剂 / 人工香精",
         allergens: "含乳制品、鸡蛋、微量坚果（玫瑰酱基底）",
-        source: "官方配料表 + 糕研所实验室复检",
+        source: "官方配料表 + 哦买糕的实验室复检",
       },
       source: "小红书 / 大众点评 · 128 条评价",
       goodReviews: [
@@ -268,7 +268,7 @@ export const cakes: Cake[] = [
         sugar: "低糖（约 11°Brix）",
         additives: "仅含吉利丁（凝固剂），无防腐剂 / 人工香精",
         allergens: "含乳制品、鸡蛋、大豆",
-        source: "官方配料表 + 糕研所实验室复检",
+        source: "官方配料表 + 哦买糕的实验室复检",
       },
       source: "小红书 / 大众点评 · 96 条评价",
       goodReviews: [
@@ -374,7 +374,7 @@ export const cakes: Cake[] = [
         sugar: "正常（约 16°Brix）",
         additives: "无防腐剂、无人工香精",
         allergens: "含乳制品、鸡蛋、麸质",
-        source: "官方配料表 + 糕研所实验室复检",
+        source: "官方配料表 + 哦买糕的实验室复检",
       },
       source: "小红书 / 大众点评 · 210 条评价",
       goodReviews: [
@@ -481,7 +481,7 @@ export const cakes: Cake[] = [
         sugar: "低糖（约 13°Brix）",
         additives: "仅含吉利丁（凝固剂），无防腐剂 / 人工香精",
         allergens: "含乳制品、鸡蛋、麸质",
-        source: "官方配料表 + 糕研所实验室复检",
+        source: "官方配料表 + 哦买糕的实验室复检",
       },
       source: "小红书 / 大众点评 · 87 条评价",
       goodReviews: [
@@ -588,7 +588,7 @@ export const cakes: Cake[] = [
         sugar: "低糖（约 12°Brix）",
         additives: "无防腐剂、无人工香精",
         allergens: "含乳制品、鸡蛋、麸质、坚果（榛子碎）",
-        source: "官方配料表 + 糕研所实验室复检",
+        source: "官方配料表 + 哦买糕的实验室复检",
       },
       source: "小红书 / 大众点评 · 65 条评价",
       goodReviews: [
@@ -696,7 +696,7 @@ export const cakes: Cake[] = [
         sugar: "低糖（约 12°Brix）",
         additives: "无防腐剂、无人工香精 / 色素",
         allergens: "含乳制品、鸡蛋、糯米（麸质）",
-        source: "官方配料表 + 糕研所实验室复检",
+        source: "官方配料表 + 哦买糕的实验室复检",
       },
       source: "小红书 / 大众点评 · 156 条评价",
       goodReviews: [
@@ -798,7 +798,7 @@ export const cakes: Cake[] = [
         sugar: "正常（约 15°Brix）",
         additives: "含少量朗姆酒（调味），无防腐剂",
         allergens: "含乳制品、鸡蛋、麸质、坚果（杏仁粉）",
-        source: "官方配料表 + 糕研所实验室复检",
+        source: "官方配料表 + 哦买糕的实验室复检",
       },
       source: "小红书 / 大众点评 · 54 条评价",
       goodReviews: [
@@ -904,7 +904,7 @@ export const cakes: Cake[] = [
         sugar: "低糖（约 13°Brix）",
         additives: "无防腐剂、无人工香精",
         allergens: "含乳制品、鸡蛋",
-        source: "官方配料表 + 糕研所实验室复检",
+        source: "官方配料表 + 哦买糕的实验室复检",
       },
       source: "小红书 / 大众点评 · 98 条评价",
       goodReviews: [

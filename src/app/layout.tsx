@@ -13,9 +13,9 @@ const notoSerifSC = Noto_Serif_SC({
 });
 
 export const metadata: Metadata = {
-  title: "糕研所 · 私房蛋糕专业选购平台",
+  title: "哦买糕的 · Oh My Cake",
   description:
-    "专业评测 + AI口味匹配 + 知识百科，帮你告别盲选，找到最适合的私房蛋糕。",
+    "认真研究每一块蛋糕，帮你选对糕、也订上糕。",
 };
 
 export const viewport: Viewport = {

@@ -1,6 +1,7 @@
 /* 首页 · 哦买糕的 Oh My Cake!（原型图布局：KV + 平台名 + 三卡片 + CTA + 选糕列表） */
 
 import Link from "next/link";
+import { Suspense } from "react";
 import CakeBrowser from "@/components/CakeBrowser";
 import KvArt from "@/components/KvArt";
 import UpcomingCard from "@/components/UpcomingCard";
@@ -94,7 +95,9 @@ export default function HomePage() {
 
       {/* 选糕列表（与选购页一致） */}
       <div className="pt-4">
-        <CakeBrowser />
+        <Suspense>
+          <CakeBrowser />
+        </Suspense>
       </div>
     </div>
   );
