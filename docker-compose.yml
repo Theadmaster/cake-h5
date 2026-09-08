@@ -1,0 +1,20 @@
+services:
+  app:
+    build: .
+    ports:
+      - "3001:3001"
+    environment:
+      - DB_HOST=1Panel-mysql-brlh
+      - DB_PORT=3306
+      - DB_USER=omc-db
+      - DB_PASSWORD=jmDDNCb352Krie5r
+      - DB_NAME=omc-db
+      - PORT=3001
+      - HOSTNAME=0.0.0.0
+    restart: unless-stopped
+    networks:
+      - 1panel-network
+
+networks:
+  1panel-network:
+    external: true

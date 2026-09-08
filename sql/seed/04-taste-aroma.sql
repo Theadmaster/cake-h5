@@ -3,6 +3,7 @@
 -- ============================================================
 
 USE `omc-db`;
+SET NAMES utf8mb4;
 
 -- 口味评分
 INSERT INTO taste_scores (id, product_id, sweetness, sweetness_desc, sourness, sourness_desc, bitterness, bitterness_desc, saltiness, saltiness_desc, umami, umami_desc) VALUES

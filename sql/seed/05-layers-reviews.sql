@@ -3,6 +3,7 @@
 -- ============================================================
 
 USE `omc-db`;
+SET NAMES utf8mb4;
 
 -- 配料层次
 INSERT INTO product_layers (id, product_id, layer_type, layer_name, ingredients, mouthfeel, highlight, sort_order) VALUES

@@ -3,6 +3,7 @@
 -- ============================================================
 
 USE `omc-db`;
+SET NAMES utf8mb4;
 
 -- 门店数据（有多个门店的品牌拆分）
 INSERT INTO stores (id, brand_id, name, address, area, phone, business_hours, is_main, is_active) VALUES

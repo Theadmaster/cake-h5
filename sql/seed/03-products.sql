@@ -3,6 +3,7 @@
 -- ============================================================
 
 USE `omc-db`;
+SET NAMES utf8mb4;
 
 -- 商品数据
 INSERT INTO products (id, brand_id, title, category, cake_base, ingredient_text, production_time, accessories, notes, heat_score, rating, rating_count, wants_count, popularity_tag, status, is_active) VALUES

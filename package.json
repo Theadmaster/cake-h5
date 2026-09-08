@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "pack:prod": "pnpm build && cp .env.prod .env.production.local && tar -czf deploy.tar.gz .next/standalone .next/static public .env.production.local package.json && rm .env.production.local"
   },
   "dependencies": {
     "mysql2": "^3.24.3",

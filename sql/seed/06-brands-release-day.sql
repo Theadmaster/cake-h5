@@ -4,6 +4,7 @@
 -- ============================================================
 
 USE `omc-db`;
+SET NAMES utf8mb4;
 
 -- 每天释放库存（有固定释放时间的品牌）
 UPDATE brands SET release_stock_day = '每天' WHERE slug = 'ita-cake';          -- 00:00:00 每日限量
