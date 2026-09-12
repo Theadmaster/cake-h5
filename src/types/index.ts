@@ -64,6 +64,7 @@ export interface ProductSku {
   people_range: string | null;
   price: number;
   status: string;
+  sort_order: number;
 }
 
 export interface TasteScore {
