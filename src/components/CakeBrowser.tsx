@@ -4,7 +4,8 @@
 
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { useInfiniteScroll } from "@/hooks/useInfiniteScroll";
 import type { CakeListItem } from "@/types";
 import { CakeSilhouette, IconClock, IconSearch, IconStar } from "@/components/icons";
 import type { IconProps } from "@/components/icons";
@@ -91,7 +92,10 @@ export default function CakeBrowser({
   const setSearchOpen = onSearchOpenChange ?? setInternalSearchOpen;
   const [cakes, setCakes] = useState<CakeListItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
   const inputRef = useRef<HTMLInputElement>(null);
+  const currentPageRef = useRef(1);
 
   /* 搜索框展开时自动聚焦 */
   useEffect(() => {
@@ -105,30 +109,65 @@ export default function CakeBrowser({
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  /* 获取商品数据 */
-  useEffect(() => {
-    const fetchCakes = async () => {
-      try {
-        const params = new URLSearchParams();
-        params.set('pageSize', '100');
-        if (submittedQuery.trim()) params.set('keyword', submittedQuery.trim());
-        if (selected.brand.length) params.set('brand', selected.brand.join(','));
-        if (selected.size.length) params.set('size', selected.size.join(','));
-        const sortMap = ['heat', 'rating', 'price', 'sales'];
-        params.set('sort', sortMap[sortBy] || 'heat');
+  /* 加载商品数据 */
+  const loadCakes = async (isLoadMore: boolean) => {
+    try {
+      const currentPage = isLoadMore ? currentPageRef.current + 1 : 1;
+      const params = new URLSearchParams();
+      params.set('pageSize', '20');
+      params.set('page', currentPage.toString());
+      if (submittedQuery.trim()) params.set('keyword', submittedQuery.trim());
+      if (selected.brand.length) params.set('brand', selected.brand.join(','));
+      if (selected.size.length) params.set('size', selected.size.join(','));
+      const sortMap = ['heat', 'rating', 'price', 'sales'];
+      params.set('sort', sortMap[sortBy] || 'heat');
 
-        const res = await fetch(`/api/products?${params.toString()}`);
-        const json = await res.json();
-        if (json.code === 0) {
-          setCakes(json.data.list);
+      if (!isLoadMore) {
+        setLoading(true);
+      }
+
+      const res = await fetch(`/api/products?${params.toString()}`);
+      const json = await res.json();
+      if (json.code === 0) {
+        const { list, pagination } = json.data;
+        if (isLoadMore) {
+          setCakes(prev => [...prev, ...list]);
+        } else {
+          setCakes(list);
         }
-      } catch (error) {
-        console.error('获取商品列表失败:', error);
-      } finally {
+        currentPageRef.current = currentPage;
+        setPage(currentPage);
+        setHasMore(currentPage < pagination.totalPages);
+      }
+    } catch (error) {
+      console.error('获取商品列表失败:', error);
+    } finally {
+      if (!isLoadMore) {
         setLoading(false);
       }
-    };
-    fetchCakes();
+    }
+  };
+
+  /* 加载更多回调函数 */
+  const fetchMore = useCallback(async () => {
+    await loadCakes(true);
+  }, [loadCakes]);
+
+  /* 使用无限滚动 Hook */
+  const { loadMoreRef, loadingMore } = useInfiniteScroll({
+    fetchMore,
+    hasMore,
+    loading,
+    threshold: 100,
+    debounceMs: 200,
+  });
+
+  /* 筛选/排序/搜索变化时重新加载 */
+  useEffect(() => {
+    currentPageRef.current = 1;
+    setPage(1);
+    setHasMore(true);
+    loadCakes(false);
   }, [selected, sortBy, submittedQuery]);
 
   const list = cakes;
@@ -350,9 +389,22 @@ export default function CakeBrowser({
         )}
 
         {list.length > 0 && (
-          <p className="py-6 text-center text-[11px] text-muted-foreground/70">
-            —— 已经到底啦 ——
-          </p>
+          <div className="py-6">
+            {/* IntersectionObserver 目标元素 */}
+            <div ref={loadMoreRef} className="h-1" />
+            
+            {loadingMore && (
+              <div className="flex justify-center py-4">
+                <p className="text-sm text-muted-foreground">加载中...</p>
+              </div>
+            )}
+            
+            {!hasMore && !loadingMore && (
+              <p className="text-center text-[11px] text-muted-foreground/70">
+                —— 已经到底啦 ——
+              </p>
+            )}
+          </div>
         )}
       </div>
 
