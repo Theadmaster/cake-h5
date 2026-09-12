@@ -165,3 +165,37 @@ export async function GET(request: NextRequest) {
     );
   }
 }
+
+// 创建商品
+export async function POST(request: NextRequest) {
+  try {
+    const body = await request.json();
+    const { 
+      brand_id, title, category, cake_base, ingredient_text,
+      production_time, accessories, notes, heat_score,
+      rating, rating_count, wants_count, popularity_tag, status
+    } = body;
+
+    const id = crypto.randomUUID();
+    await query(
+      `INSERT INTO products (id, brand_id, title, category, cake_base, ingredient_text,
+        production_time, accessories, notes, heat_score,
+        rating, rating_count, wants_count, popularity_tag, status)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [id, brand_id, title, category || null, cake_base || null, ingredient_text || null,
+       production_time || null, accessories ? JSON.stringify(accessories) : null, notes || null, heat_score || 0,
+       rating || null, rating_count || 0, wants_count || 0, popularity_tag || null, status || '在架']
+    );
+
+    return NextResponse.json({
+      code: 0,
+      data: { id, ...body },
+    });
+  } catch (error) {
+    console.error('创建商品失败:', error);
+    return NextResponse.json(
+      { code: -1, message: '创建商品失败' },
+      { status: 500 }
+    );
+  }
+}

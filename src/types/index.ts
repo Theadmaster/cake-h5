@@ -175,3 +175,72 @@ export interface Cake extends CakeListItem {
   detail: CakeDetail;
   skus: { id: string; size: string; sizeDetail: string | null; people: string | null; price: number; status: string }[];
 }
+
+export interface User {
+  id: string;
+  username: string | null;
+  password_hash: string | null;
+  openid: string;
+  union_id: string | null;
+  nickname: string | null;
+  avatar_url: string | null;
+  phone: string | null;
+  user_type: 'buyer' | 'seller' | 'operator' | 'admin';
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface Buyer {
+  id: string;
+  user_id: string;
+  level: number;
+  points: number;
+  total_orders: number;
+  total_spent: number;
+  favorite_areas: string[] | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface Seller {
+  id: string;
+  user_id: string;
+  brand_id: string;
+  store_id: string | null;
+  position: string | null;
+  permissions: string[] | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface Operator {
+  id: string;
+  user_id: string;
+  real_name: string | null;
+  department: string | null;
+  role_name: string | null;
+  permissions: string[] | null;
+  last_login_at: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface WikiEntry {
+  id: string;
+  entry_name: string;
+  category: '蛋糕胚' | '奶油' | '品类' | '风味' | '原料' | '保存' | '尺寸' | '术语';
+  summary: string | null;
+  content: string | null;
+  view_count: number;
+  favorite_count: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface Tag {
+  id: string;
+  name: string;
+  tag_group: '属性' | '风味' | '场景' | '人群';
+  created_at: string;
+}

@@ -245,52 +245,116 @@ CREATE TABLE product_tags (
 
 
 -- ============================================================
--- 13. 用户表
+-- 13. 用户表（通用登录鉴权）
 -- ============================================================
 CREATE TABLE users (
     id              VARCHAR(36) PRIMARY KEY,
+    username        VARCHAR(50) UNIQUE COMMENT '用户名（用于登录）',
+    password_hash   VARCHAR(255) COMMENT '密码哈希',
     openid          VARCHAR(100) UNIQUE COMMENT '微信openid',
     union_id        VARCHAR(100) COMMENT '微信union_id',
     nickname        VARCHAR(100),
     avatar_url      VARCHAR(500),
     phone           VARCHAR(20),
+    user_type       ENUM('buyer', 'seller', 'operator', 'admin') DEFAULT 'buyer' COMMENT '用户类型: buyer=买家, seller=卖家, operator=运营, admin=超级管理员',
+    is_active       TINYINT(1) DEFAULT 1 COMMENT '是否启用',
     created_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-) COMMENT '用户表';
+    updated_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+
+    INDEX idx_type (user_type),
+    INDEX idx_username (username)
+) COMMENT '用户表（通用登录鉴权）';
 
 
 -- ============================================================
--- 14. 用户想要/收藏 (依赖 users, products)
+-- 14. 买家表（业务属性）
+-- ============================================================
+CREATE TABLE buyers (
+    id              VARCHAR(36) PRIMARY KEY,
+    user_id         VARCHAR(36) NOT NULL UNIQUE COMMENT '关联用户ID',
+    level           INT DEFAULT 1 COMMENT '会员等级',
+    points          INT DEFAULT 0 COMMENT '积分',
+    total_orders    INT DEFAULT 0 COMMENT '累计订单数',
+    total_spent     DECIMAL(12,2) DEFAULT 0 COMMENT '累计消费金额',
+    favorite_areas  JSON COMMENT '偏好区域',
+    created_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+) COMMENT '买家表（业务属性）';
+
+
+-- ============================================================
+-- 15. 卖家表（业务属性）
+-- ============================================================
+CREATE TABLE sellers (
+    id              VARCHAR(36) PRIMARY KEY,
+    user_id         VARCHAR(36) NOT NULL UNIQUE COMMENT '关联用户ID',
+    brand_id        VARCHAR(36) NOT NULL COMMENT '所属品牌ID',
+    store_id        VARCHAR(36) COMMENT '所属门店ID',
+    position        VARCHAR(50) COMMENT '职位',
+    permissions     JSON COMMENT '权限列表',
+    created_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (brand_id) REFERENCES brands(id) ON DELETE CASCADE,
+    FOREIGN KEY (store_id) REFERENCES stores(id) ON DELETE SET NULL,
+    INDEX idx_brand (brand_id)
+) COMMENT '卖家表（业务属性）';
+
+
+-- ============================================================
+-- 16. 运营人员表（运营管理人员）
+-- ============================================================
+CREATE TABLE operators (
+    id              VARCHAR(36) PRIMARY KEY,
+    user_id         VARCHAR(36) NOT NULL UNIQUE COMMENT '关联用户ID',
+    real_name       VARCHAR(50) COMMENT '真实姓名',
+    department      VARCHAR(50) COMMENT '部门',
+    role_name       VARCHAR(50) COMMENT '角色名称',
+    permissions     JSON COMMENT '权限列表',
+    last_login_at   TIMESTAMP COMMENT '最后登录时间',
+    created_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+) COMMENT '运营人员表（运营管理人员）';
+
+
+-- ============================================================
+-- 17. 用户想要/收藏 (依赖 buyers, products)
 -- ============================================================
 CREATE TABLE user_wants (
-    user_id         VARCHAR(36) NOT NULL,
+    buyer_id        VARCHAR(36) NOT NULL,
     product_id      VARCHAR(36) NOT NULL,
     created_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 
-    PRIMARY KEY (user_id, product_id),
-    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    PRIMARY KEY (buyer_id, product_id),
+    FOREIGN KEY (buyer_id) REFERENCES buyers(id) ON DELETE CASCADE,
     FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE
 ) COMMENT '用户想要/收藏';
 
 
 -- ============================================================
--- 15. 用户评论 (依赖 users, products)
+-- 18. 用户评论 (依赖 buyers, products)
 -- ============================================================
 CREATE TABLE user_comments (
     id              VARCHAR(36) PRIMARY KEY,
-    user_id         VARCHAR(36) NOT NULL,
+    buyer_id        VARCHAR(36) NOT NULL,
     product_id      VARCHAR(36) NOT NULL,
     content         VARCHAR(500) NOT NULL,
+    rating          DECIMAL(2,1) COMMENT '评分 1-5',
     created_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 
-    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (buyer_id) REFERENCES buyers(id) ON DELETE CASCADE,
     FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE,
     INDEX idx_product_time (product_id, created_at DESC)
 ) COMMENT '用户评论';
 
 
 -- ============================================================
--- 16. 百科词条
+-- 19. 百科词条
 -- ============================================================
 CREATE TABLE wiki_entries (
     id              VARCHAR(36) PRIMARY KEY,

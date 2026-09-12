@@ -207,3 +207,63 @@ export async function GET(
     );
   }
 }
+
+// 更新商品
+export async function PUT(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id } = await params;
+    const body = await request.json();
+    const { 
+      brand_id, title, category, cake_base, ingredient_text,
+      production_time, accessories, notes, heat_score,
+      rating, rating_count, wants_count, popularity_tag, status
+    } = body;
+
+    await query(
+      `UPDATE products SET 
+        brand_id = ?, title = ?, category = ?, cake_base = ?, ingredient_text = ?,
+        production_time = ?, accessories = ?, notes = ?, heat_score = ?,
+        rating = ?, rating_count = ?, wants_count = ?, popularity_tag = ?, status = ?
+       WHERE id = ?`,
+      [brand_id, title, category, cake_base, ingredient_text,
+       production_time, JSON.stringify(accessories), notes, heat_score,
+       rating, rating_count, wants_count, popularity_tag, status, id]
+    );
+
+    return NextResponse.json({
+      code: 0,
+      data: { id, ...body },
+    });
+  } catch (error) {
+    console.error('更新商品失败:', error);
+    return NextResponse.json(
+      { code: -1, message: '更新商品失败' },
+      { status: 500 }
+    );
+  }
+}
+
+// 删除商品
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id } = await params;
+    await query('DELETE FROM products WHERE id = ?', [id]);
+
+    return NextResponse.json({
+      code: 0,
+      message: '删除成功',
+    });
+  } catch (error) {
+    console.error('删除商品失败:', error);
+    return NextResponse.json(
+      { code: -1, message: '删除商品失败' },
+      { status: 500 }
+    );
+  }
+}
