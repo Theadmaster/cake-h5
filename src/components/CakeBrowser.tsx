@@ -261,9 +261,17 @@ export default function CakeBrowser({
                   <div
                     className={`relative flex h-[108px] w-[108px] shrink-0 items-center justify-center overflow-hidden rounded-xl ${c.art}`}
                   >
-                    <CakeSilhouette
-                      className={`h-14 w-14 ${c.silhouetteColor}`}
-                    />
+                    {c.cover_image_url ? (
+                      <img
+                        src={c.cover_image_url}
+                        alt={c.name}
+                        className="h-full w-full object-cover"
+                      />
+                    ) : (
+                      <CakeSilhouette
+                        className={`h-14 w-14 ${c.silhouetteColor}`}
+                      />
+                    )}
                     <span
                       className={`absolute left-1.5 top-1.5 rounded-full px-2 py-0.5 text-[10px] font-medium leading-relaxed ${c.heatClass}`}
                     >

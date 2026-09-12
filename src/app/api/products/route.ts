@@ -23,33 +23,47 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
 
-    // 分页参数
-    const page = parseInt(searchParams.get('page') || '1');
-    const pageSize = parseInt(searchParams.get('pageSize') || '20');
+    // 分页参数（带边界检查）
+    const page = Math.max(1, parseInt(searchParams.get('page') || '1') || 1);
+    const pageSize = Math.min(100, Math.max(1, parseInt(searchParams.get('pageSize') || '20') || 20));
     const offset = (page - 1) * pageSize;
 
     // 筛选参数
     const brand = searchParams.get('brand');
+    const brandId = searchParams.get('brand_id');
     const size = searchParams.get('size');
-    const booking = searchParams.get('booking');
-    const flavor = searchParams.get('flavor');
-    const sort = searchParams.get('sort') || 'heat'; // heat | rating | price | sales
+    const status = searchParams.get('status');
+    const sort = searchParams.get('sort') || 'heat';
     const keyword = searchParams.get('keyword');
 
-    // 构建查询
-    let where = ['p.is_active = 1'];
-    let params: any[] = [];
+    // 构建查询条件
+    const where: string[] = ['p.is_active = 1'];
+    const params: any[] = [];
 
-    if (brand) {
-      const brands = brand.split(',');
-      where.push(`b.name IN (${brands.map(() => '?').join(',')})`);
-      params.push(...brands);
+    // 品牌筛选（支持brand_id或brand名称）
+    if (brandId) {
+      where.push('p.brand_id = ?');
+      params.push(brandId);
+    } else if (brand) {
+      const brands = brand.split(',').filter(Boolean);
+      if (brands.length > 0) {
+        where.push(`b.name IN (${brands.map(() => '?').join(',')})`);
+        params.push(...brands);
+      }
+    }
+
+    // 状态筛选
+    if (status) {
+      where.push('p.status = ?');
+      params.push(status);
     }
 
     if (size) {
-      const sizes = size.split(',');
-      where.push(`EXISTS (SELECT 1 FROM product_skus ps WHERE ps.product_id = p.id AND ps.size_label IN (${sizes.map(() => '?').join(',')}))`);
-      params.push(...sizes);
+      const sizes = size.split(',').filter(Boolean);
+      if (sizes.length > 0) {
+        where.push(`EXISTS (SELECT 1 FROM product_skus ps WHERE ps.product_id = p.id AND ps.size_label IN (${sizes.map(() => '?').join(',')}))`);
+        params.push(...sizes);
+      }
     }
 
     if (keyword) {
@@ -58,18 +72,13 @@ export async function GET(request: NextRequest) {
     }
 
     // 排序
-    let orderBy = 'p.heat_score DESC';
-    switch (sort) {
-      case 'rating':
-        orderBy = 'p.rating DESC';
-        break;
-      case 'price':
-        orderBy = 'min_price ASC';
-        break;
-      case 'sales':
-        orderBy = 'p.heat_score DESC'; // 暂用热度代替
-        break;
-    }
+    const orderByMap: Record<string, string> = {
+      'heat': 'p.heat_score DESC',
+      'rating': 'p.rating DESC',
+      'price': 'min_price ASC',
+      'sales': 'p.heat_score DESC',
+    };
+    const orderBy = orderByMap[sort] || orderByMap['heat'];
 
     // 查询总数
     const countSql = `
@@ -78,7 +87,8 @@ export async function GET(request: NextRequest) {
       JOIN brands b ON p.brand_id = b.id
       WHERE ${where.join(' AND ')}
     `;
-    const [{ total }] = await query<{ total: number }>(countSql, params);
+    const countResult = await query<{ total: number }>(countSql, params);
+    const total = countResult.length > 0 ? countResult[0].total : 0;
 
     // 查询商品列表
     const sql = `
@@ -86,14 +96,15 @@ export async function GET(request: NextRequest) {
         p.id, p.title, b.name as brand_name, b.slug as brand_slug,
         b.rush_difficulty, b.advance_days, b.advance_booking_text,
         p.rating, p.rating_count, p.heat_score, p.popularity_tag,
-        p.cake_base, p.notes,
+        p.cake_base, p.notes, p.cover_image_url, p.image_urls,
         MIN(ps.price) as min_price,
         GROUP_CONCAT(DISTINCT ps.size_label) as sizes
       FROM products p
       JOIN brands b ON p.brand_id = b.id
       LEFT JOIN product_skus ps ON p.id = ps.product_id AND ps.status != '下架'
       WHERE ${where.join(' AND ')}
-      GROUP BY p.id
+      GROUP BY p.id, p.title, b.name, b.slug, b.rush_difficulty, b.advance_days, b.advance_booking_text,
+               p.rating, p.rating_count, p.heat_score, p.popularity_tag, p.cake_base, p.notes, p.cover_image_url, p.image_urls
       ORDER BY ${orderBy}
       LIMIT ? OFFSET ?
     `;
@@ -112,6 +123,8 @@ export async function GET(request: NextRequest) {
       popularity_tag: string | null;
       cake_base: string | null;
       notes: string | null;
+      cover_image_url: string | null;
+      image_urls: string | null;
       min_price: number;
       sizes: string | null;
     }
@@ -130,18 +143,15 @@ export async function GET(request: NextRequest) {
         name: p.title,
         brand: p.brand_name,
         size,
-        addr: '', // 需要从门店查询
         price: p.min_price || 0,
         rating: p.rating ? parseFloat(p.rating) : 0,
         reviews: p.rating_count || 0,
         heatTag,
         heatClass: heatTagClassMap[heatTag] || 'bg-muted text-muted-foreground',
-        art: 'bg-gradient-to-br from-[#f6e4e1] to-[#e5beb8]', // 默认渐变
-        silhouetteColor: 'text-[#c48f8a]',
         booking: p.advance_booking_text || '随时可订',
         bookingGroup,
-        tags: [],
-        flavors: [],
+        cover_image_url: p.cover_image_url,
+        image_urls: Array.isArray(p.image_urls) ? p.image_urls : (p.image_urls ? JSON.parse(p.image_urls) : []),
       };
     });
 
@@ -160,7 +170,7 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     console.error('获取商品列表失败:', error);
     return NextResponse.json(
-      { code: -1, message: '获取商品列表失败' },
+      { code: -1, message: '获取商品列表失败', error: error instanceof Error ? error.message : String(error) },
       { status: 500 }
     );
   }
@@ -173,19 +183,42 @@ export async function POST(request: NextRequest) {
     const { 
       brand_id, title, category, cake_base, ingredient_text,
       production_time, accessories, notes, heat_score,
-      rating, rating_count, wants_count, popularity_tag, status
+      rating, rating_count, wants_count, popularity_tag, status,
+      cover_image_url, image_urls, skus
     } = body;
+
+    // 验证必填字段
+    if (!brand_id || !title) {
+      return NextResponse.json(
+        { code: -1, message: '品牌和标题为必填项' },
+        { status: 400 }
+      );
+    }
 
     const id = crypto.randomUUID();
     await query(
       `INSERT INTO products (id, brand_id, title, category, cake_base, ingredient_text,
         production_time, accessories, notes, heat_score,
-        rating, rating_count, wants_count, popularity_tag, status)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [id, brand_id, title, category || null, cake_base || null, ingredient_text || null,
-       production_time || null, accessories ? JSON.stringify(accessories) : null, notes || null, heat_score || 0,
-       rating || null, rating_count || 0, wants_count || 0, popularity_tag || null, status || '在架']
+        rating, rating_count, wants_count, popularity_tag, status,
+        cover_image_url, image_urls)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [id, brand_id, title, category ?? null, cake_base ?? null, ingredient_text ?? null,
+       production_time ?? null, accessories ? JSON.stringify(accessories) : null, notes ?? null, heat_score ?? 0,
+       rating ?? null, rating_count ?? 0, wants_count ?? 0, popularity_tag ?? null, status ?? '在架',
+       cover_image_url ?? null, image_urls ? JSON.stringify(image_urls) : null]
     );
+
+    // 创建SKU
+    if (skus && Array.isArray(skus)) {
+      for (const sku of skus) {
+        await query(
+          `INSERT INTO product_skus (id, product_id, size_label, size_detail, people_range, price, status, sort_order)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+          [sku.id || crypto.randomUUID(), id, sku.size_label ?? sku.size ?? '', sku.size_detail ?? sku.sizeDetail ?? null, 
+           sku.people_range ?? sku.people ?? null, sku.price ?? 0, sku.status ?? '在架', sku.sort_order ?? 0]
+        );
+      }
+    }
 
     return NextResponse.json({
       code: 0,
@@ -194,7 +227,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('创建商品失败:', error);
     return NextResponse.json(
-      { code: -1, message: '创建商品失败' },
+      { code: -1, message: '创建商品失败', error: error instanceof Error ? error.message : String(error) },
       { status: 500 }
     );
   }

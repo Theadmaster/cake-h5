@@ -172,13 +172,27 @@ export async function GET(
       code: 0,
       data: {
         id: product.id,
+        title: product.title,
+        brand_id: product.brand_id,
+        category: product.category,
+        cover_image_url: product.cover_image_url,
+        image_urls: Array.isArray(product.image_urls) ? product.image_urls : (product.image_urls ? JSON.parse(product.image_urls) : []),
+        cake_base: product.cake_base,
+        ingredient_text: product.ingredient_text,
+        production_time: product.production_time,
+        accessories: Array.isArray(product.accessories) ? product.accessories : (product.accessories ? JSON.parse(product.accessories) : null),
+        notes: product.notes,
+        heat_score: product.heat_score,
+        rating: parseFloat(product.rating) || 0,
+        rating_count: product.rating_count || 0,
+        wants_count: product.wants_count || 0,
+        popularity_tag: product.popularity_tag,
+        status: product.status,
         name: product.title,
         brand: product.brand_name,
         size: skus.length > 0 ? skus[0].size_label : '',
         addr,
         price: skus.length > 0 ? parseFloat(String(skus[0].price)) : 0,
-        status: product.status,
-        rating: parseFloat(product.rating) || 0,
         reviews: product.rating_count || 0,
         heatTag,
         heatClass: heatTagClassMap[heatTag] || 'bg-muted text-muted-foreground',
@@ -191,11 +205,12 @@ export async function GET(
         detail,
         skus: skus.map(s => ({
           id: s.id,
-          size: s.size_label,
-          sizeDetail: s.size_detail,
-          people: s.people_range,
+          size_label: s.size_label,
+          size_detail: s.size_detail,
+          people_range: s.people_range,
           price: parseFloat(String(s.price)) || 0,
           status: s.status,
+          sort_order: s.sort_order
         })),
       },
     });
@@ -213,25 +228,53 @@ export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  let body: any = null;
   try {
     const { id } = await params;
-    const body = await request.json();
+    body = await request.json();
     const { 
       brand_id, title, category, cake_base, ingredient_text,
       production_time, accessories, notes, heat_score,
-      rating, rating_count, wants_count, popularity_tag, status
+      rating, rating_count, wants_count, popularity_tag, status,
+      cover_image_url, image_urls, skus
     } = body;
 
+    // 检查商品是否存在
+    const existing = await query('SELECT id FROM products WHERE id = ?', [id]);
+    if (existing.length === 0) {
+      return NextResponse.json(
+        { code: -1, message: '商品不存在' },
+        { status: 404 }
+      );
+    }
+
+    // 更新商品基本信息
     await query(
       `UPDATE products SET 
         brand_id = ?, title = ?, category = ?, cake_base = ?, ingredient_text = ?,
         production_time = ?, accessories = ?, notes = ?, heat_score = ?,
-        rating = ?, rating_count = ?, wants_count = ?, popularity_tag = ?, status = ?
+        rating = ?, rating_count = ?, wants_count = ?, popularity_tag = ?, status = ?,
+        cover_image_url = ?, image_urls = ?
        WHERE id = ?`,
-      [brand_id, title, category, cake_base, ingredient_text,
-       production_time, JSON.stringify(accessories), notes, heat_score,
-       rating, rating_count, wants_count, popularity_tag, status, id]
+      [brand_id, title, category ?? null, cake_base ?? null, ingredient_text ?? null,
+       production_time ?? null, accessories ? JSON.stringify(accessories) : null, notes ?? null, heat_score ?? 0,
+       rating ?? null, rating_count ?? 0, wants_count ?? 0, popularity_tag ?? null, status ?? '在架',
+       cover_image_url ?? null, image_urls ? JSON.stringify(image_urls) : null, id]
     );
+
+    // 更新SKU
+    if (skus && Array.isArray(skus)) {
+      await query('DELETE FROM product_skus WHERE product_id = ?', [id]);
+      
+      for (const sku of skus) {
+        await query(
+          `INSERT INTO product_skus (id, product_id, size_label, size_detail, people_range, price, status, sort_order)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+          [sku.id || crypto.randomUUID(), id, sku.size_label ?? sku.size ?? '', sku.size_detail ?? sku.sizeDetail ?? null, 
+           sku.people_range ?? sku.people ?? null, sku.price ?? 0, sku.status ?? '在架', sku.sort_order ?? 0]
+        );
+      }
+    }
 
     return NextResponse.json({
       code: 0,
@@ -240,7 +283,7 @@ export async function PUT(
   } catch (error) {
     console.error('更新商品失败:', error);
     return NextResponse.json(
-      { code: -1, message: '更新商品失败' },
+      { code: -1, message: '更新商品失败', error: error instanceof Error ? error.message : String(error) },
       { status: 500 }
     );
   }

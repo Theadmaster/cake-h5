@@ -41,6 +41,8 @@ export interface Product {
   brand_id: string;
   title: string;
   category: string | null;
+  cover_image_url: string | null;
+  image_urls: string[] | null;
   cake_base: string | null;
   ingredient_text: string | null;
   production_time: string | null;
@@ -132,6 +134,8 @@ export interface CakeListItem {
   bookingGroup: string;
   tags: { label: string; kind: TagKind }[];
   flavors: string[];
+  cover_image_url: string | null;
+  image_urls: string[];
 }
 
 export interface CakeDetail {

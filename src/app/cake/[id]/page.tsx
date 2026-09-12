@@ -277,21 +277,36 @@ export default function CakeDetailPage() {
           onScroll={onTrackScroll}
           className="no-scrollbar flex h-[300px] snap-x snap-mandatory overflow-x-auto"
         >
-          {[0, 1, 2].map((i) => (
-            <div
-              key={i}
-              className={`relative flex w-full shrink-0 snap-center items-center justify-center ${cake.art}`}
-            >
-              <CakeSilhouette
-                className={`${
-                  i === 1 ? "h-24 w-24 translate-x-8 -translate-y-6 opacity-80" : i === 2 ? "h-32 w-32 -translate-x-6 translate-y-4" : "h-28 w-28"
-                } ${cake.silhouetteColor}`}
-              />
-            </div>
-          ))}
+          {cake.image_urls && cake.image_urls.length > 0 ? (
+            cake.image_urls.map((url, i) => (
+              <div
+                key={i}
+                className="relative flex w-full shrink-0 snap-center items-center justify-center"
+              >
+                <img
+                  src={url}
+                  alt={`${cake.name} ${i + 1}`}
+                  className="h-full w-full object-cover"
+                />
+              </div>
+            ))
+          ) : (
+            [0, 1, 2].map((i) => (
+              <div
+                key={i}
+                className={`relative flex w-full shrink-0 snap-center items-center justify-center ${cake.art}`}
+              >
+                <CakeSilhouette
+                  className={`${
+                    i === 1 ? "h-24 w-24 translate-x-8 -translate-y-6 opacity-80" : i === 2 ? "h-32 w-32 -translate-x-6 translate-y-4" : "h-28 w-28"
+                  } ${cake.silhouetteColor}`}
+                />
+              </div>
+            ))
+          )}
         </div>
         <span className="absolute bottom-3 right-4 rounded-full bg-black/30 px-2.5 py-0.5 text-[11px] text-white backdrop-blur-sm">
-          {page + 1}/3
+          {cake.image_urls && cake.image_urls.length > 0 ? `${page + 1}/${cake.image_urls.length}` : `${page + 1}/3`}
         </span>
         {/* 返回 */}
         <Link
