@@ -131,8 +131,33 @@ export async function GET(request: NextRequest) {
 
     const products = await query<ProductRow>(sql, [...params, pageSize, offset]);
 
+    // 查询商品标签
+    const productIds = products.map(p => p.id);
+    let tagsMap: Record<string, { label: string; kind: string }[]> = {};
+    
+    if (productIds.length > 0) {
+      const tagsSql = `
+        SELECT pt.product_id, t.name as tag_name, t.tag_group
+        FROM product_tags pt
+        JOIN tags t ON pt.tag_id = t.id
+        WHERE pt.product_id IN (${productIds.map(() => '?').join(',')})
+      `;
+      const tagsResult = await query<{ product_id: string; tag_name: string; tag_group: string }>(tagsSql, productIds);
+      
+      tagsResult.forEach(row => {
+        if (!tagsMap[row.product_id]) tagsMap[row.product_id] = [];
+        tagsMap[row.product_id].push({
+          label: row.tag_name,
+          kind: row.tag_group === '属性' ? 'good' : row.tag_group === '风味' ? 'note' : 'plain'
+        });
+      });
+    }
+
     // 转换为前端格式
-    const list = products.map(p => {
+    const artColors = ['bg-[#f5ebe0]', 'bg-[#fef9ef]', 'bg-[#f0f4f3]', 'bg-[#fdf2f8]', 'bg-[#f5f3ff]'];
+    const silhouetteColors = ['text-[#c48f8a]', 'text-[#b8a88a]', 'text-[#8aab97]', 'text-[#a89bc4]', 'text-[#c49b7a]'];
+    
+    const list = products.map((p, idx) => {
       const heatTag = p.popularity_tag || '冷门好物';
       const bookingGroup = getBookingGroup(p.advance_days, p.rush_difficulty);
       const sizes = p.sizes ? p.sizes.split(',') : [];
@@ -143,15 +168,20 @@ export async function GET(request: NextRequest) {
         name: p.title,
         brand: p.brand_name,
         size,
+        addr: '',
         price: p.min_price || 0,
         rating: p.rating ? parseFloat(p.rating) : 0,
         reviews: p.rating_count || 0,
         heatTag,
         heatClass: heatTagClassMap[heatTag] || 'bg-muted text-muted-foreground',
+        art: artColors[idx % artColors.length],
+        silhouetteColor: silhouetteColors[idx % silhouetteColors.length],
         booking: p.advance_booking_text || '随时可订',
         bookingGroup,
         cover_image_url: p.cover_image_url,
         image_urls: Array.isArray(p.image_urls) ? p.image_urls : (p.image_urls ? JSON.parse(p.image_urls) : []),
+        tags: tagsMap[p.id] || [],
+        flavors: [],
       };
     });
 
