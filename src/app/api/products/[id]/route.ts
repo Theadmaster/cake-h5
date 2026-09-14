@@ -168,6 +168,9 @@ export async function GET(
       badReviews,
     };
 
+    // 查询商品香气标签
+    const aromaTags = await query('SELECT * FROM product_aroma_tags WHERE product_id = ?', [id]) as any[];
+
     return NextResponse.json({
       code: 0,
       data: {
@@ -212,6 +215,13 @@ export async function GET(
           status: s.status,
           sort_order: s.sort_order
         })),
+        // 关联表原始数据，用于管理页面
+        taste_scores: tasteScores.length > 0 ? tasteScores[0] : null,
+        aroma_notes: aromaNotes,
+        flavor_conclusions: flavorConclusions.length > 0 ? flavorConclusions[0] : null,
+        product_layers: layers,
+        product_aroma_tags: aromaTags,
+        product_reviews: reviews,
       },
     });
   } catch (error) {
@@ -236,7 +246,8 @@ export async function PUT(
       brand_id, title, category, cake_base, ingredient_text,
       production_time, accessories, notes, heat_score,
       rating, rating_count, wants_count, popularity_tag, status,
-      cover_image_url, image_urls, skus
+      cover_image_url, image_urls, skus,
+      taste_scores, aroma_notes, flavor_conclusions, product_layers, product_aroma_tags, product_reviews
     } = body;
 
     // 检查商品是否存在
@@ -272,6 +283,83 @@ export async function PUT(
            VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
           [sku.id || crypto.randomUUID(), id, sku.size_label ?? sku.size ?? '', sku.size_detail ?? sku.sizeDetail ?? null, 
            sku.people_range ?? sku.people ?? null, sku.price ?? 0, sku.status ?? '在架', sku.sort_order ?? 0]
+        );
+      }
+    }
+
+    // 更新口味评分 (1:1)
+    if (taste_scores && typeof taste_scores === 'object') {
+      await query('DELETE FROM taste_scores WHERE product_id = ?', [id]);
+      await query(
+        `INSERT INTO taste_scores (id, product_id, sweetness, sweetness_desc, sourness, sourness_desc, bitterness, bitterness_desc, saltiness, saltiness_desc, umami, umami_desc)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [taste_scores.id || crypto.randomUUID(), id, 
+         taste_scores.sweetness ?? null, taste_scores.sweetness_desc ?? null,
+         taste_scores.sourness ?? null, taste_scores.sourness_desc ?? null,
+         taste_scores.bitterness ?? null, taste_scores.bitterness_desc ?? null,
+         taste_scores.saltiness ?? null, taste_scores.saltiness_desc ?? null,
+         taste_scores.umami ?? null, taste_scores.umami_desc ?? null]
+      );
+    }
+
+    // 更新香气阶段 (1:N)
+    if (aroma_notes && Array.isArray(aroma_notes)) {
+      await query('DELETE FROM aroma_notes WHERE product_id = ?', [id]);
+      for (const note of aroma_notes) {
+        await query(
+          `INSERT INTO aroma_notes (id, product_id, stage, stage_label, summary, detail, sort_order)
+           VALUES (?, ?, ?, ?, ?, ?, ?)`,
+          [note.id || crypto.randomUUID(), id, note.stage, note.stage_label ?? null, 
+           note.summary ?? null, note.detail ?? null, note.sort_order ?? 0]
+        );
+      }
+    }
+
+    // 更新风味结论 (1:1)
+    if (flavor_conclusions && typeof flavor_conclusions === 'object') {
+      await query('DELETE FROM flavor_conclusions WHERE product_id = ?', [id]);
+      await query(
+        `INSERT INTO flavor_conclusions (id, product_id, summary, content)
+         VALUES (?, ?, ?, ?)`,
+        [flavor_conclusions.id || crypto.randomUUID(), id, 
+         flavor_conclusions.summary ?? null, flavor_conclusions.content ?? null]
+      );
+    }
+
+    // 更新配料层次 (1:N)
+    if (product_layers && Array.isArray(product_layers)) {
+      await query('DELETE FROM product_layers WHERE product_id = ?', [id]);
+      for (const layer of product_layers) {
+        await query(
+          `INSERT INTO product_layers (id, product_id, layer_type, layer_name, ingredients, mouthfeel, highlight, sort_order)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+          [layer.id || crypto.randomUUID(), id, layer.layer_type, layer.layer_name ?? null, 
+           layer.ingredients ?? null, layer.mouthfeel ?? null, layer.highlight ?? null, layer.sort_order ?? 0]
+        );
+      }
+    }
+
+    // 更新香气标签 (1:N)
+    if (product_aroma_tags && Array.isArray(product_aroma_tags)) {
+      await query('DELETE FROM product_aroma_tags WHERE product_id = ?', [id]);
+      for (const tag of product_aroma_tags) {
+        await query(
+          `INSERT INTO product_aroma_tags (id, product_id, tag_name)
+           VALUES (?, ?, ?)`,
+          [tag.id || crypto.randomUUID(), id, tag.tag_name]
+        );
+      }
+    }
+
+    // 更新口碑 (1:N)
+    if (product_reviews && Array.isArray(product_reviews)) {
+      await query('DELETE FROM product_reviews WHERE product_id = ?', [id]);
+      for (const review of product_reviews) {
+        await query(
+          `INSERT INTO product_reviews (id, product_id, review_type, content, feedback_count, sort_order)
+           VALUES (?, ?, ?, ?, ?, ?)`,
+          [review.id || crypto.randomUUID(), id, review.review_type, review.content, 
+           review.feedback_count ?? 1, review.sort_order ?? 0]
         );
       }
     }
