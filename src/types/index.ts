@@ -148,9 +148,6 @@ export interface CakeDetail {
   overall: {
     score: number;
     overPercent: number;
-    taste: number;
-    ingredient: number;
-    value: number;
   };
   dims: { name: string; score: number; desc: string }[];
   aroma: { stage: string; timing: string; desc: string; summary: string; tone: AromaTone }[];

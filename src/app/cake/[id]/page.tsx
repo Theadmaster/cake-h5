@@ -188,6 +188,15 @@ function ScoreBar({ score }: { score: number }) {
 
 /* ---------------- 页面 ---------------- */
 
+/* 文案兜底：空值（null/undefined/空串）统一展示为 --，避免页面留白 */
+const EMPTY = "--";
+function text(v: unknown): string {
+  if (v === null || v === undefined) return EMPTY;
+  const s = String(v).trim();
+  return s ? s : EMPTY;
+}
+
+
 export default function CakeDetailPage() {
   const params = useParams<{ id: string }>();
   const [cake, setCake] = useState<Cake | null>(null);
@@ -327,7 +336,7 @@ export default function CakeDetailPage() {
               {cake.skus.length > 0 ? cake.skus[selectedSku].price : cake.price}
             </span>
             <span className="truncate text-xs text-muted-foreground">
-              / {cake.skus.length > 0 ? cake.skus[selectedSku].sizeDetail || cake.skus[selectedSku].size : d.sizePeople}
+              / {text(cake.skus.length > 0 ? cake.skus[selectedSku].sizeDetail || cake.skus[selectedSku].size : d.sizePeople)}
             </span>
             {cake.status && cake.status !== '在架' && (
               <span className="rounded-full bg-rose/10 px-2 py-0.5 text-[10px] font-medium text-rose">
@@ -394,7 +403,7 @@ export default function CakeDetailPage() {
           </span>
           <span className="flex items-center gap-1">
             <IconPin className="h-3.5 w-3.5" />
-            {d.addr}
+            {text(d.addr)}
           </span>
         </div>
       </section>
@@ -404,7 +413,7 @@ export default function CakeDetailPage() {
         <SectionTitle>基础味觉画像</SectionTitle>
         <div className="mt-3.5 rounded-2xl bg-accent-soft/60 p-4">
           <p className="font-serif text-[14.5px] leading-relaxed text-[#5a422c]">
-            {d.profile}
+            {text(d.profile)}
           </p>
         </div>
       </section>
@@ -413,10 +422,10 @@ export default function CakeDetailPage() {
       <section className="px-4 pt-7">
         <div className="flex items-center justify-between gap-2">
           <SectionTitle>味觉量化评分</SectionTitle>
-          <span className="flex shrink-0 items-center gap-1 rounded-full bg-matcha-soft px-2.5 py-1 text-[10px] font-medium text-matcha">
+          {/* <span className="flex shrink-0 items-center gap-1 rounded-full bg-matcha-soft px-2.5 py-1 text-[10px] font-medium text-matcha">
             <IconBadgeCheck className="h-3.5 w-3.5" />
             3 位糕点师盲测均分
-          </span>
+          </span> */}
         </div>
 
         <div className="mt-3.5 rounded-2xl border border-border bg-card p-4">
@@ -438,26 +447,6 @@ export default function CakeDetailPage() {
                   </span>
                 )}
               </p>
-              <div className="mt-2 space-y-1.5">
-                {(
-                  [
-                    ["味道", d.overall.taste],
-                    ["原料", d.overall.ingredient],
-                    ["性价比", d.overall.value],
-                  ] as const
-                ).map(([label, v]) => (
-                  <div
-                    key={label}
-                    className="flex items-center gap-2 text-[11px] text-muted-foreground"
-                  >
-                    <span className="w-10 shrink-0">{label}</span>
-                    <ScoreBar score={v} />
-                    <span className="w-6 shrink-0 text-right tabular-nums">
-                      {v.toFixed(1)}
-                    </span>
-                  </div>
-                ))}
-              </div>
             </div>
           </div>
 
@@ -537,7 +526,7 @@ export default function CakeDetailPage() {
                       <ScoreBar score={dim.score} />
                     </div>
                     <p className="mt-1 text-[11px] leading-relaxed text-muted-foreground">
-                      {dim.desc}
+                      {text(dim.desc)}
                     </p>
                   </div>
                 ))}
@@ -573,12 +562,12 @@ export default function CakeDetailPage() {
             >
               <h3 className="text-[13px] font-semibold">
                 {a.stage}
-                <span className="ml-1.5 font-normal opacity-75">{a.timing}</span>
+                <span className="ml-1.5 font-normal opacity-75">{text(a.timing)}</span>
               </h3>
               <p className="mt-1.5 text-[12px] leading-relaxed opacity-90">
-                {a.desc}
+                {text(a.desc)}
               </p>
-              <p className="mt-1.5 text-[11px] italic opacity-70">{a.summary}</p>
+              <p className="mt-1.5 text-[11px] italic opacity-70">{text(a.summary)}</p>
             </div>
           ))}
         </div>
@@ -610,13 +599,13 @@ export default function CakeDetailPage() {
                   <span className="shrink-0 rounded bg-accent-soft px-1 py-0.5 text-[10px] text-[#7a5a35]">
                     味
                   </span>
-                  {t.taste}
+                  {text(t.taste)}
                 </p>
                 <p className="mt-1 flex items-start gap-1.5 text-[11.5px] leading-relaxed text-muted-foreground">
                   <span className="shrink-0 rounded bg-matcha-soft px-1 py-0.5 text-[10px] text-matcha">
                     感
                   </span>
-                  {t.mouthfeel}
+                  {text(t.mouthfeel)}
                 </p>
               </div>
             </div>
@@ -650,14 +639,14 @@ export default function CakeDetailPage() {
               <div key={label} className="flex gap-3">
                 <dt className="w-16 shrink-0 text-muted-foreground">{label}</dt>
                 <dd className="min-w-0 flex-1 leading-relaxed text-foreground">
-                  {value}
+                  {text(value)}
                 </dd>
               </div>
             ))}
           </dl>
           <p className="mt-4 flex items-center gap-1.5 border-t border-border/60 pt-3 text-[11px] text-muted-foreground">
             <IconShieldCheck className="h-3.5 w-3.5 shrink-0 text-matcha" />
-            核查来源：{d.ingredients.source}
+            核查来源：{text(d.ingredients.source)}
           </p>
         </div>
       </section>
@@ -667,36 +656,44 @@ export default function CakeDetailPage() {
         <SectionTitle>真实口碑聚合</SectionTitle>
         <p className="mt-2 flex items-center gap-1.5 text-[11px] text-muted-foreground">
           <IconClock className="h-3.5 w-3.5" />
-          来源：{d.source}
+          来源：{text(d.source)}
         </p>
 
         <div className="mt-3 rounded-2xl border border-border bg-card p-4">
           <h3 className="text-[12.5px] font-medium text-foreground">好的地方</h3>
-          <ul className="mt-2.5 space-y-2">
-            {d.goodReviews.map((r) => (
-              <li key={r} className="flex gap-2 text-[12px] leading-relaxed">
-                <IconCheck className="mt-0.5 h-3.5 w-3.5 shrink-0 text-matcha" />
-                <span className="min-w-0 text-muted-foreground">{r}</span>
-              </li>
-            ))}
-          </ul>
+          {d.goodReviews.length === 0 ? (
+            <p className="mt-2.5 text-[12px] text-muted-foreground">{EMPTY}</p>
+          ) : (
+            <ul className="mt-2.5 space-y-2">
+              {d.goodReviews.map((r) => (
+                <li key={r} className="flex gap-2 text-[12px] leading-relaxed">
+                  <IconCheck className="mt-0.5 h-3.5 w-3.5 shrink-0 text-matcha" />
+                  <span className="min-w-0 text-muted-foreground">{text(r)}</span>
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
 
         <div className="mt-3 rounded-2xl border border-border bg-card p-4">
           <h3 className="text-[12.5px] font-medium text-foreground">需要注意</h3>
-          <ul className="mt-2.5 space-y-2">
-            {d.badReviews.map((r) => (
-              <li key={r.text} className="flex gap-2 text-[12px] leading-relaxed">
-                <IconAlert className="mt-0.5 h-3.5 w-3.5 shrink-0 text-rose" />
-                <span className="min-w-0 flex-1 text-muted-foreground">
-                  {r.text}
-                  <span className="ml-1.5 whitespace-nowrap text-[10px]">
-                    {r.count} 人反馈
+          {d.badReviews.length === 0 ? (
+            <p className="mt-2.5 text-[12px] text-muted-foreground">{EMPTY}</p>
+          ) : (
+            <ul className="mt-2.5 space-y-2">
+              {d.badReviews.map((r) => (
+                <li key={r.text} className="flex gap-2 text-[12px] leading-relaxed">
+                  <IconAlert className="mt-0.5 h-3.5 w-3.5 shrink-0 text-rose" />
+                  <span className="min-w-0 flex-1 text-muted-foreground">
+                    {text(r.text)}
+                    <span className="ml-1.5 whitespace-nowrap text-[10px]">
+                      {r.count} 人反馈
+                    </span>
                   </span>
-                </span>
-              </li>
-            ))}
-          </ul>
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
       </section>
 
@@ -716,7 +713,7 @@ export default function CakeDetailPage() {
             <div key={label} className="flex gap-3">
               <dt className="w-16 shrink-0 text-muted-foreground">{label}</dt>
               <dd className="min-w-0 flex-1 leading-relaxed text-foreground">
-                {value}
+                {text(value)}
               </dd>
             </div>
           ))}

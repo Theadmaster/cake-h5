@@ -135,9 +135,6 @@ export async function GET(
       overall: {
         score: parseFloat(product.rating) || 0,
         overPercent,
-        taste: dims.length > 0 ? dims[0].score : 0,
-        ingredient: dims.length > 1 ? dims[1].score : 0,
-        value: product.rating ? parseFloat(product.rating) * 0.95 : 0,
       },
       dims,
       aroma,
@@ -208,12 +205,11 @@ export async function GET(
         detail,
         skus: skus.map(s => ({
           id: s.id,
-          size_label: s.size_label,
-          size_detail: s.size_detail,
-          people_range: s.people_range,
+          size: s.size_label,
+          sizeDetail: s.size_detail,
+          people: s.people_range,
           price: parseFloat(String(s.price)) || 0,
-          status: s.status,
-          sort_order: s.sort_order
+          status: s.status
         })),
         // 关联表原始数据，用于管理页面
         taste_scores: tasteScores.length > 0 ? tasteScores[0] : null,
