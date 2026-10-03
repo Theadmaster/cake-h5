@@ -247,10 +247,11 @@ export async function POST(request: NextRequest) {
     if (skus && Array.isArray(skus)) {
       for (const sku of skus) {
         await query(
-          `INSERT INTO product_skus (id, product_id, size_label, size_detail, people_range, price, status, sort_order)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-          [sku.id || crypto.randomUUID(), id, sku.size_label ?? sku.size ?? '', sku.size_detail ?? sku.sizeDetail ?? null, 
-           sku.people_range ?? sku.people ?? null, sku.price ?? 0, sku.status ?? '在架', sku.sort_order ?? 0]
+          `INSERT INTO product_skus (id, product_id, size_label, size_detail, people_range, price, stock, sku_code, status, sort_order)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          [sku.id || crypto.randomUUID(), id, sku.size_label ?? sku.size ?? '', sku.size_detail ?? sku.sizeDetail ?? null,
+           sku.people_range ?? sku.people ?? null, sku.price ?? 0, sku.stock ?? 0, sku.sku_code ?? null,
+           sku.status ?? '在架', sku.sort_order ?? 0]
         );
       }
     }
