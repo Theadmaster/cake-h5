@@ -77,6 +77,9 @@ export async function GET(request: NextRequest) {
       'rating': 'p.rating DESC',
       'price': 'min_price ASC',
       'sales': 'p.heat_score DESC',
+      // 按最近编辑时间倒序（updated_at 由 ON UPDATE CURRENT_TIMESTAMP 自动维护），
+      // admin 商品管理列表使用；heat_score 作次级排序保证同秒记录顺序稳定
+      'updated': 'p.updated_at DESC, p.heat_score DESC',
     };
     const orderBy = orderByMap[sort] || orderByMap['heat'];
 
