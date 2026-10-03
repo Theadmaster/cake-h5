@@ -3,7 +3,6 @@
 /* 我的页面（PRD 4.6）：头像、名称、性别、手机、生日、地址（本地态，暂无后端） */
 
 import { useRef, useState } from "react";
-import BottomNav from "@/components/BottomNav";
 import type { IconProps } from "@/components/icons";
 
 /* 默认头像：奶油底 + 蛋糕线稿 */
@@ -63,7 +62,7 @@ export default function MePage() {
     "h-full w-full bg-transparent text-right text-[13px] text-foreground focus:outline-none";
 
   return (
-    <div className="mx-auto flex min-h-dvh w-full max-w-[480px] flex-col bg-background pb-24">
+    <div className="mx-auto flex min-h-dvh w-full max-w-[480px] flex-col bg-background pb-10">
       {/* 用户卡片 */}
       <section
         className="mx-4 mt-5 flex items-center gap-4 rounded-3xl bg-gradient-to-br from-accent-soft via-[#f3e6d8] to-rose-soft/60 p-5"
@@ -212,8 +211,6 @@ export default function MePage() {
           {saved ? "已保存" : "保存资料"}
         </button>
       </div>
-
-      <BottomNav active="me" />
     </div>
   );
 }

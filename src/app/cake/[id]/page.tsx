@@ -196,6 +196,12 @@ function text(v: unknown): string {
   return s ? s : EMPTY;
 }
 
+/* 默认选中第一个非「下架」的 SKU；全下架时兜底选第 0 个 */
+function defaultSkuIndex(skus: Cake["skus"]): number {
+  const i = skus.findIndex((s) => s.status !== "下架");
+  return i >= 0 ? i : 0;
+}
+
 
 export default function CakeDetailPage() {
   const params = useParams<{ id: string }>();
@@ -218,6 +224,7 @@ export default function CakeDetailPage() {
         if (json.code === 0) {
           setCake(json.data);
           setWants(json.data.detail.wants);
+          setSelectedSku(defaultSkuIndex(json.data.skus || []));
         } else {
           notFound();
         }
@@ -241,6 +248,11 @@ export default function CakeDetailPage() {
 
   if (!cake) notFound();
   const d = cake.detail;
+
+  /* 当前选中 SKU（带边界保护：skus 变化时避免越界） */
+  const activeSkuIndex =
+    cake.skus.length > 0 ? Math.min(selectedSku, cake.skus.length - 1) : -1;
+  const currentSku = activeSkuIndex >= 0 ? cake.skus[activeSkuIndex] : null;
 
   function onTrackScroll() {
     const el = trackRef.current;
@@ -333,10 +345,10 @@ export default function CakeDetailPage() {
           <div className="flex min-w-0 items-baseline gap-2">
             <span className="font-serif text-[24px] font-semibold text-primary">
               <span className="text-[14px] font-normal">¥</span>
-              {cake.skus.length > 0 ? cake.skus[selectedSku].price : cake.price}
+              {currentSku ? currentSku.price : cake.price}
             </span>
             <span className="truncate text-xs text-muted-foreground">
-              / {text(cake.skus.length > 0 ? cake.skus[selectedSku].sizeDetail || cake.skus[selectedSku].size : d.sizePeople)}
+              / {text(currentSku ? currentSku.sizeDetail || currentSku.size : d.sizePeople)}
             </span>
             {cake.status && cake.status !== '在架' && (
               <span className="rounded-full bg-rose/10 px-2 py-0.5 text-[10px] font-medium text-rose">
@@ -376,9 +388,9 @@ export default function CakeDetailPage() {
                 key={sku.id}
                 type="button"
                 onClick={() => setSelectedSku(i)}
-                disabled={sku.status !== '在架'}
+                disabled={sku.status === '下架'}
                 className={`rounded-full border px-3 py-1.5 text-[12px] transition active:scale-95 disabled:opacity-50 ${
-                  selectedSku === i
+                  activeSkuIndex === i
                     ? "border-accent bg-accent-soft font-medium text-[#7a5a35]"
                     : "border-border bg-card text-foreground hover:border-accent/50"
                 }`}

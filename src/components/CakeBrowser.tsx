@@ -284,7 +284,7 @@ export default function CakeBrowser({
       </div>
 
       {/* 商品列表 */}
-      <div className="flex-1 px-4 pt-3.5 pb-28" aria-label="蛋糕列表">
+      <div className="flex-1 px-4 pt-3.5 pb-10" aria-label="蛋糕列表">
         {loading ? (
           <div className="flex flex-col items-center gap-2.5 py-16 text-center">
             <p className="text-sm text-muted-foreground">加载中...</p>
@@ -414,7 +414,7 @@ export default function CakeBrowser({
           type="button"
           aria-label="返回顶部"
           onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
-          className="fixed bottom-24 right-4 z-50 flex h-11 w-11 cursor-pointer items-center justify-center rounded-full bg-primary text-primary-foreground shadow-[0_4px_14px_rgba(107,74,51,0.28)] transition hover:opacity-95 active:scale-95"
+          className="fixed bottom-6 right-4 z-50 flex h-11 w-11 cursor-pointer items-center justify-center rounded-full bg-primary text-primary-foreground shadow-[0_4px_14px_rgba(107,74,51,0.28)] transition hover:opacity-95 active:scale-95"
         >
           <IconArrowUp className="h-5 w-5" />
         </button>

@@ -4,7 +4,6 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import BottomNav from "@/components/BottomNav";
 import SectionTitle from "@/components/SectionTitle";
 import { IconSearch, IconStar } from "@/components/icons";
 import type { IconProps } from "@/components/icons";
@@ -289,7 +288,7 @@ export default function WikiPage() {
   const flavor = FLAVORS[wheel];
 
   return (
-    <div className="mx-auto flex min-h-dvh w-full max-w-[480px] flex-col bg-background pb-24">
+    <div className="mx-auto flex min-h-dvh w-full max-w-[480px] flex-col bg-background pb-10">
       {/* 顶部导航 */}
       <header className="sticky top-0 z-40 flex h-14 items-center gap-2 border-b border-border bg-background/95 px-4 backdrop-blur">
         <Link
@@ -605,8 +604,6 @@ export default function WikiPage() {
           </p>
         </>
       )}
-
-      <BottomNav active="wiki" />
     </div>
   );
 }

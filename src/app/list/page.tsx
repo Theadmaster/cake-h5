@@ -5,7 +5,6 @@
 import Link from "next/link";
 import { Suspense, useState } from "react";
 import CakeBrowser from "@/components/CakeBrowser";
-import BottomNav from "@/components/BottomNav";
 import { IconSearch } from "@/components/icons";
 import type { IconProps } from "@/components/icons";
 
@@ -58,8 +57,6 @@ export default function ListPage() {
       <Suspense>
         <CakeBrowser stickyTopClass="top-14" externalSearchOpen={searchOpen} onSearchOpenChange={setSearchOpen} />
       </Suspense>
-
-      <BottomNav active="list" />
     </div>
   );
 }

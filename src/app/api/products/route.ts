@@ -91,20 +91,26 @@ export async function GET(request: NextRequest) {
     const total = countResult.length > 0 ? countResult[0].total : 0;
 
     // 查询商品列表
+    // 价格/尺寸取自「最低价 SKU」（优先在架，其次按价格升序），与商详页口径一致；
+    // 通过 1:1 关联子查询保证 price 与 size 来自同一条 SKU，且全下架商品也能正常展示
     const sql = `
       SELECT
         p.id, p.title, b.name as brand_name, b.slug as brand_slug,
         b.rush_difficulty, b.advance_days, b.advance_booking_text,
         p.rating, p.rating_count, p.heat_score, p.popularity_tag,
         p.cake_base, p.notes, p.cover_image_url, p.image_urls,
-        MIN(ps.price) as min_price,
-        GROUP_CONCAT(DISTINCT ps.size_label) as sizes
+        ps.price as min_price,
+        ps.size_label as sku_size
       FROM products p
       JOIN brands b ON p.brand_id = b.id
-      LEFT JOIN product_skus ps ON p.id = ps.product_id AND ps.status != '下架'
+      LEFT JOIN product_skus ps ON ps.id = (
+        SELECT ps2.id FROM product_skus ps2
+        WHERE ps2.product_id = p.id
+        ORDER BY CASE WHEN ps2.status = '在架' THEN 0 ELSE 1 END ASC,
+                 ps2.price ASC, ps2.sort_order ASC, ps2.id ASC
+        LIMIT 1
+      )
       WHERE ${where.join(' AND ')}
-      GROUP BY p.id, p.title, b.name, b.slug, b.rush_difficulty, b.advance_days, b.advance_booking_text,
-               p.rating, p.rating_count, p.heat_score, p.popularity_tag, p.cake_base, p.notes, p.cover_image_url, p.image_urls
       ORDER BY ${orderBy}
       LIMIT ? OFFSET ?
     `;
@@ -126,7 +132,7 @@ export async function GET(request: NextRequest) {
       cover_image_url: string | null;
       image_urls: string | null;
       min_price: number;
-      sizes: string | null;
+      sku_size: string | null;
     }
 
     const products = await query<ProductRow>(sql, [...params, pageSize, offset]);
@@ -160,8 +166,7 @@ export async function GET(request: NextRequest) {
     const list = products.map((p, idx) => {
       const heatTag = p.popularity_tag || '冷门好物';
       const bookingGroup = getBookingGroup(p.advance_days, p.rush_difficulty);
-      const sizes = p.sizes ? p.sizes.split(',') : [];
-      const size = sizes[0] || '';
+      const size = p.sku_size || '';
 
       return {
         id: p.id,
